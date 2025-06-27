@@ -438,6 +438,8 @@ def pick_to_learn(config: P2LConfig, key: jax.Array) -> Dict[str, Any]:
         - generalization_bound (float): Computed P2L generalization bound
         - num_iterations (int): Number of P2L iterations performed
         - converged (bool): Whether P2L converged
+        - losses (List[float]): List of losses across P2L iterations
+        - accuracies (List[float]): List of accuracies across P2L iterations
     """
     # Build model, optimizer, data
     key, model_key, data_key, sets_key = jax.random.split(key, 4)
@@ -461,6 +463,10 @@ def pick_to_learn(config: P2LConfig, key: jax.Array) -> Dict[str, Any]:
     iteration = 0
     converged = False
 
+    # Logging metrics
+    losses = []
+    accuracies = []
+
     # Main P2L loop
     while iteration < config.max_iterations:
         print(f"\n--- P2L Iteration {iteration + 1} ---")
@@ -482,7 +488,7 @@ def pick_to_learn(config: P2LConfig, key: jax.Array) -> Dict[str, Any]:
             )
 
         # Step 2: Evaluate on non-support set and check convergence
-        _loss, _accuracy, worst_nonsupport_index, converged = (
+        loss, accuracy, worst_nonsupport_index, converged = (
             config.evaluate_on_nonsupport_set(
                 graphdef,
                 model_state,
@@ -490,6 +496,12 @@ def pick_to_learn(config: P2LConfig, key: jax.Array) -> Dict[str, Any]:
                 targets[np.array(nonsupport_indices)],
             )
         )
+
+        # Log metrics
+        losses.append(loss)
+        accuracies.append(accuracy)
+        print(f"Loss: {loss}")
+        print(f"Accuracy: {accuracy}")
 
         if converged:
             print("P2L Converged!")
@@ -518,4 +530,6 @@ def pick_to_learn(config: P2LConfig, key: jax.Array) -> Dict[str, Any]:
         "generalization_bound": bound,
         "num_iterations": iteration,
         "converged": converged,
+        "losses": losses,
+        "accuracies": accuracies,
     }
