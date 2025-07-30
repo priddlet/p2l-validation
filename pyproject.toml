@@ -19,6 +19,9 @@ dependencies = [
     "flax",
     "optax",
     "tqdm",
+    "matplotlib",
+    "seaborn",
+    "pandas",
 ]
 
 [project.urls]
